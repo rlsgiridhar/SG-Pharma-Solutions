@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
@@ -11,12 +11,14 @@ import {
   FlaskConical,
   Globe2,
   Mail,
+  Menu,
   MapPin,
   Microscope,
   Phone,
   ShieldCheck,
   Sparkles,
   TestTube2,
+  X,
 } from "lucide-react";
 
 const services = [
@@ -144,36 +146,74 @@ function LogoMark({ compact = false }) {
 function Particles() {
   return (
     <div className="particles" aria-hidden="true">
-      {Array.from({ length: 24 }).map((_, index) => <span key={index} style={{ "--i": index }} />)}
+      {Array.from({ length: 14 }).map((_, index) => <span key={index} style={{ "--i": index }} />)}
     </div>
   );
 }
 
-function HeroVisual() {
+function HeroVisual({ reduceMotion = false }) {
+  const motionProps = reduceMotion
+    ? { initial: false, animate: false }
+    : {
+        initial: { opacity: 0, x: 38, scale: 0.96 },
+        animate: { opacity: 1, x: 0, scale: 1 },
+        transition: { duration: 0.75, delay: 0.12, ease: "easeOut" },
+      };
+
   return (
-    <motion.div className="hero-visual" initial={{ opacity: 0, x: 38, scale: 0.96 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }}>
+    <motion.div className="hero-visual" {...motionProps}>
       <div className="mesh-glow" />
       <div className="dna-line" aria-hidden="true">{Array.from({ length: 10 }).map((_, index) => <span key={index} />)}</div>
       <div className="dashboard-card compliance-card">
+        <div className="panel-science-mark" aria-hidden="true">
+          <span className="science-dot d1" />
+          <span className="science-dot d2" />
+          <span className="science-dot d3" />
+          <span className="science-line l1" />
+          <span className="science-line l2" />
+        </div>
         <div className="dashboard-top">
-          <LogoMark compact />
-          <div><strong>E&L Compliance Console</strong><small>Regulatory study control</small></div>
+          <div className="dashboard-title">
+            <LogoMark compact />
+            <div><strong>E&amp;L Compliance Console</strong><small>Global regulatory workflow oversight</small></div>
+          </div>
+          <div className="review-status"><span />Active Regulatory Review</div>
         </div>
         <div className="compliance-score">
-          <span>96%</span>
-          <div><strong>Submission readiness</strong><small>Protocol, testing, toxicology and report alignment</small></div>
+          <div className="readiness-ring" aria-label="96% Compliance Readiness">
+            <svg viewBox="0 0 120 120" role="img" aria-hidden="true">
+              <circle className="ring-track" cx="60" cy="60" r="48" />
+              <circle className="ring-progress" cx="60" cy="60" r="48" pathLength="100" />
+            </svg>
+            <span>96%</span>
+          </div>
+          <div><strong>Compliance Readiness</strong><small>Protocol validation, toxicological assessment, analytical coordination and submission reporting alignment.</small></div>
         </div>
-        <div className="signal-bars">
-          {["68%", "44%", "78%", "56%", "88%"].map((height) => <span key={height} style={{ "--h": height }} />)}
+        <div className="live-metrics" aria-label="Live compliance metrics">
+          {[
+            ["Study Coordination", "Active"],
+            ["Protocol Alignment", "Synced"],
+            ["Global Review", "In Progress"],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+        <div className="analytics-graph" aria-label="Compliance activity trend">
+          <div className="graph-topline"><span>Compliance Activity</span><strong>+18%</strong></div>
+          <svg viewBox="0 0 420 128" role="img" aria-hidden="true">
+            <path className="graph-fill" d="M0 99 C42 90 64 76 101 80 C145 85 157 47 204 54 C244 60 252 38 296 42 C344 47 365 23 420 28 L420 128 L0 128 Z" />
+            <path className="graph-line" pathLength="100" d="M0 99 C42 90 64 76 101 80 C145 85 157 47 204 54 C244 60 252 38 296 42 C344 47 365 23 420 28" />
+            <circle cx="296" cy="42" r="4" />
+            <circle cx="420" cy="28" r="4" />
+          </svg>
+        </div>
+        <div className="compliance-tags" aria-label="Compliance frameworks">
+          {standards.map((item) => <span key={item}>{item}</span>)}
         </div>
       </div>
-      <div className="molecule-card">
-        <div className="molecule-node n1" /><div className="molecule-node n2" /><div className="molecule-node n3" /><div className="molecule-node n4" />
-        <div className="molecule-bond b1" /><div className="molecule-bond b2" /><div className="molecule-bond b3" />
-        <Microscope size={52} />
-      </div>
-      <div className="floating-standard">USP &lt;1664&gt;</div>
-      <div className="floating-standard second">ISO 10993</div>
     </motion.div>
   );
 }
@@ -206,7 +246,38 @@ function CountUp({ value, suffix }) {
 export default function App() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 28 });
+  const reduceMotion = useReducedMotion();
   const [activeService, setActiveService] = useState(null);
+  const [expandedService, setExpandedService] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 760px)");
+    const syncMobile = () => setIsMobile(media.matches);
+    syncMobile();
+    media.addEventListener("change", syncMobile);
+    return () => media.removeEventListener("change", syncMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!navOpen) return undefined;
+    const closeOnResize = () => {
+      if (window.innerWidth > 760) setNavOpen(false);
+    };
+    window.addEventListener("resize", closeOnResize);
+    return () => window.removeEventListener("resize", closeOnResize);
+  }, [navOpen]);
+
+  const navItems = ["About", "Aim", "Services", "Why", "Process", "Contact"];
+
+  const handleServiceSelect = (service) => {
+    if (isMobile) {
+      setExpandedService((current) => (current === service.title ? null : service.title));
+      return;
+    }
+    setActiveService(service);
+  };
 
   const handleContactSubmit = (event) => {
     event.preventDefault();
@@ -227,16 +298,27 @@ export default function App() {
       <motion.div className="progress-bar" style={{ scaleX }} />
       <div className="loader"><LogoMark compact /><span>SG Pharma Solutions</span></div>
       <nav className="nav">
-        <a href="#home" className="nav-brand"><LogoMark /></a>
-        <div className="nav-links">{["About", "Aim", "Services", "Why", "Process", "Contact"].map((item) => <a key={item} href={`#${item.toLowerCase()}`}>{item}</a>)}</div>
+        <a href="#home" className="nav-brand" onClick={() => setNavOpen(false)}><LogoMark /></a>
+        <div className="nav-links">{navItems.map((item) => <a key={item} href={`#${item.toLowerCase()}`}>{item}</a>)}</div>
         <a className="nav-cta" href="#contact">Book Consultation</a>
+        <button className="nav-toggle" type="button" aria-label={navOpen ? "Close navigation" : "Open navigation"} aria-expanded={navOpen} onClick={() => setNavOpen((open) => !open)}>
+          {navOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        <AnimatePresence>
+          {navOpen && (
+            <motion.div className="mobile-menu" initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.2, ease: "easeOut" }}>
+              {navItems.map((item) => <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setNavOpen(false)}>{item}</a>)}
+              <a className="mobile-menu-cta" href="#contact" onClick={() => setNavOpen(false)}>Book Consultation</a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       <main id="home">
         <section className="hero section-dark">
           <Particles />
           <div className="hero-bg" />
-          <motion.div className="hero-content" initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <motion.div className="hero-content" initial={reduceMotion ? false : { opacity: 0, y: 22 }} animate={reduceMotion ? false : { opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: "easeOut" }}>
             <div className="hero-kicker"><Sparkles size={16} /> Global pharmaceutical regulatory consultancy</div>
             <h1><span>Driving E&amp;L Compliance</span><span>With Confidence</span></h1>
             <p className="hero-subtitle">Your Device. Your Drug. Our Expertise.</p>
@@ -246,7 +328,7 @@ export default function App() {
             </div>
             <div className="standards-strip">{standards.map((item) => <span key={item}>{item}</span>)}</div>
           </motion.div>
-          <HeroVisual />
+          <HeroVisual reduceMotion={reduceMotion || isMobile} />
         </section>
 
         <section id="about" className="section about">
@@ -284,16 +366,21 @@ export default function App() {
                 key={service.title}
                 {...reveal}
                 transition={{ ...reveal.transition, delay: index * 0.035 }}
-                onClick={() => setActiveService(service)}
+                onClick={() => handleServiceSelect(service)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    setActiveService(service);
+                    handleServiceSelect(service);
                   }
                 }}
+                aria-expanded={isMobile ? expandedService === service.title : undefined}
                 tabIndex="0"
               >
                 <div className="icon-wrap"><Icon size={24} /></div><h3>{service.title}</h3><p>{service.text}</p><ChevronRight className="card-arrow" />
+                <div className="service-mobile-detail">
+                  <p>{service.detail}</p>
+                  <ul>{service.capabilities.slice(0, 4).map((item) => <li key={item}><CheckCircle2 size={15} />{item}</li>)}</ul>
+                </div>
               </motion.article>
             );
           })}</div>
@@ -337,8 +424,8 @@ export default function App() {
       </main>
 
       {activeService && (
-        <motion.div className="service-popup-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveService(null)}>
-          <motion.article className="service-popup" initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.28, ease: "easeOut" }} onClick={(event) => event.stopPropagation()}>
+        <motion.div className="service-popup-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12, ease: "easeOut" }} onClick={() => setActiveService(null)}>
+          <motion.article className="service-popup" initial={{ opacity: 0, y: 14, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }} onClick={(event) => event.stopPropagation()}>
             <button className="popup-close" type="button" onClick={() => setActiveService(null)} aria-label="Close service details">×</button>
             <p className="eyebrow">Service Detail</p>
             <h2>{activeService.title}</h2>
