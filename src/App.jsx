@@ -177,7 +177,7 @@ function HeroVisual({ reduceMotion = false }) {
             <LogoMark compact />
             <div><strong>E&amp;L Compliance Console</strong><small>Global regulatory workflow oversight</small></div>
           </div>
-          <div className="review-status"><span />Active Regulatory Review</div>
+          <div className="review-status">Active Regulatory Review</div>
         </div>
         <div className="compliance-score">
           <div className="readiness-ring" aria-label="96% Compliance Readiness">
@@ -398,7 +398,7 @@ export default function App() {
         </section>
 
         <section className="section testimonials section-dark">
-          <motion.div className="section-heading" {...reveal}><p className="eyebrow">Client Confidence</p><h2>Designed for teams that need clarity, speed and defensible science.</h2></motion.div>
+          <motion.div className="section-heading testimonial-heading" {...reveal}><p className="eyebrow">Client Confidence</p><h2>Designed for teams that need clarity, speed and defensible science.</h2></motion.div>
           <div className="testimonial-marquee" aria-label="Client testimonials">
             <div className="testimonial-track">
               {testimonialLoop.map(([name, text], index) => (
